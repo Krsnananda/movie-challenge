@@ -5,18 +5,17 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native'
 import Routes from './src/routes'
 
 export default function App() {
+  const theme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: '#0f111c',
+    },
+  }
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={theme}>
       <Routes />
     </NavigationContainer>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

@@ -9,7 +9,9 @@ const AppRoutes = () => (
     <AppStack.Screen name="Home"
       options={{
         headerTitleAlign: 'center',
-        headerTitle: 'Movies'
+        headerTitle: 'Movies',
+        headerTintColor: '#fff',
+        headerTransparent: true
       }}
       component={HomeScreen}
     />
