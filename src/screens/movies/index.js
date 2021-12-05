@@ -128,7 +128,7 @@ export default function HomeScreen() {
       if (search.length >= 3) {
         setIsSearching(true)
         const resultStorage = await searchStorage(search)
-        if (resultStorage) {
+        if (resultStorage && resultStorage.length > 0) {
           setMovieList(resultStorage)
           //   console.log(resultStorage)
         } else {
