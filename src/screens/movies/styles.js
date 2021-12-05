@@ -2,8 +2,6 @@ import styled from "styled-components";
 import { Searchbar } from "react-native-paper";
 
 export const Container = styled.View`
-  justify-content: center;
-  align-items: center;
   padding: 5%;
   margin: 100px 0;
 `
@@ -17,6 +15,14 @@ export const EmptyLogo = styled.Image`
   width: 200px;
   height: 200px;
 `
+export const Poster = styled.Image`
+  width: 150px;
+  height: 150px;
+`
 export const Wrapper = styled.View`
   margin-top: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: auto;
 `

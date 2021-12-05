@@ -1,41 +1,27 @@
 import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Text, View, FlatList } from 'react-native'
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, omdbapi } from '../../services/api';
 import cinema from './../../../assets/cinema.png';
-import { Container, EmptyLogo, Search, Wrapper } from './styles';
+import { Container, EmptyLogo, Poster, Search, Wrapper } from './styles';
 
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [columns, setColumns] = useState(3)
   const [movieList, setMovieList] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
 
-  // useEffect(() => {
-  //   testeFunc()
-  // }, [])
-
-  const teste = [
-    {
-      "_id": "61a9b93839e5b6a465995ab7",
-      "title": "Batman 5",
-      "year": "2005",
-      "imdbID": "tt0372784112323aasasasas",
-      "type": "movie",
-      "poster": "https://m.media-amazon.com/images/M/MV5BOTY4YjI2N2MtYmFlMC00ZjcyLTg3YjEtMDQyM2ZjYzQ5YWFkXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
-      "__v": 0
+  useEffect(() => {
+    let searchExists = true
+    if (searchQuery.length < 3) {
+      setMovieList([])
     }
-  ]
-  const value = JSON.stringify(teste);
+    return (() => {
+      searchExists = false
+    })
+  }, [searchQuery])
 
-  // testeeee
-  const testeFunc = async () => {
-    try {
-      console.log(value, '***')
-      await AsyncStorage.setItem('@Challenge:movies', value)
-    } catch (error) {
-      console.log(error)
-    }
-
-  }
 
   // Search on Asyncstorage
   const searchStorage = async (search) => {
@@ -78,27 +64,48 @@ export default function HomeScreen() {
     setSearchQuery(search)
     try {
       if (search.length >= 3) {
+        setIsSearching(true)
         const resultStorage = await searchStorage(search)
         if (resultStorage.length > 0) {
-          // Ver se retorna aqui ou armazena em um state
-          resultStorage.map(item => {
-            console.log(item, '--> storage')
-          })
+          setMovieList(resultStorage)
+          //   console.log(resultStorage)
         } else {
           const resultDb = await searchDb(search)
           if (resultDb) {
-            console.log(resultDb)
+            setMovieList(resultDb)
+            // console.log(resultDb)
           } else {
             const resultApi = await searchApi(search)
-            console.log(resultApi)
+            setMovieList(resultApi.Search)
+            // console.log(resultApi)
           }
         }
+        setIsSearching(false)
+      } else {
+        setMovieList([])
       }
     } catch (error) {
       console.log('handleSearch -> ', error)
     }
   }
 
+  function createRows(data, columns) {
+    const rows = Math.floor(data.length / columns);
+    let lastRowElements = data.length - rows * columns;
+    while (lastRowElements !== columns) {
+      data.push({
+        imdbID: `empty-${lastRowElements}`,
+        title: `empty-${lastRowElements}`,
+        type: `empty-${lastRowElements}`,
+        year: `empty-${lastRowElements}`,
+        poster: `empty-${lastRowElements}`,
+
+        empty: true
+      });
+      lastRowElements += 1;
+    }
+    return data;
+  }
   return (
     <Container>
       <Search
@@ -109,9 +116,35 @@ export default function HomeScreen() {
         placeholderTextColor={"#fff"}
         iconColor={"#fff"}
       />
-      <Wrapper>
-        <EmptyLogo source={cinema} />
-      </Wrapper>
+      {
+        isSearching ? (
+          <Wrapper>
+            <ActivityIndicator size="large" color="#e68027" />
+          </Wrapper>
+
+        ) : (
+          movieList.length > 0 ? (
+            <FlatList
+              data={createRows(movieList, columns)}
+              keyExtractor={item => item.imdbID}
+              numColumns={columns}
+              renderItem={({ item }) => {
+                return (
+                  item.Poster != 'N/A' && (
+                    <View style={{ flexGrow: 1, margin: 4 }} >
+                      <Image style={{ height: 150, resizeMode: 'contain', borderRadius: 10 }} source={{ uri: item.Poster }} />
+                    </View>
+                  )
+                );
+              }}
+            />
+          ) : (
+            <Wrapper>
+              <EmptyLogo source={cinema} />
+            </Wrapper>
+          )
+        )
+      }
     </Container>
   )
 }
