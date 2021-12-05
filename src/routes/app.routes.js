@@ -16,11 +16,6 @@ const AppRoutes = () => (
         headerTitle: 'Movies',
         headerTintColor: '#fff',
         headerTransparent: true,
-        headerRight: () => (
-          <TouchableOpacity onPress={() => navigation.navigate('Favorites')} >
-            <FavoriteMenu resizeMode={'contain'} source={heart} />
-          </TouchableOpacity>
-        )
       })}
       component={HomeScreen}
     />

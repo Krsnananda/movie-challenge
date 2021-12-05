@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, FlatList, ToastAndroid, TouchableOpacity, View } from 'react-native'
 import { Modal, Portal, Provider, IconButton, Colors } from 'react-native-paper'
 import axios from 'axios';
+import heart from './../../../assets/heart.png';
 import { useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, omdbapi } from '../../services/api';
@@ -17,9 +18,10 @@ import {
   Info,
   Wrapper
 } from './styles';
+import { FavoriteMenu } from '../../styles';
 
 export default function HomeScreen() {
-  const { } = useNavigation()
+  const navigation = useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [columns, setColumns] = useState(3)
   const [movieList, setMovieList] = useState([])
@@ -42,6 +44,16 @@ export default function HomeScreen() {
       setFavorites(res.data)
     }).catch(error => console.log('Error in favorites ->', error))
   }, [checked])
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => navigation.navigate('Favorites')} >
+          <FavoriteMenu resizeMode={'contain'} source={heart} />
+        </TouchableOpacity>
+      )
+    })
+  }, [navigation])
 
   const setFavoriteMovie = async (movie) => {
     try {
