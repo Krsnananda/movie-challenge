@@ -15,7 +15,6 @@ export default function FavoriteScreen() {
 
   const getFavorites = async () => {
     try {
-      console.log('object')
       setIsLoading(true)
       const result = await axios.get(db.favorites)
       setFavorites(result.data)
