@@ -18,7 +18,7 @@ export default function HomeScreen() {
       const data = await AsyncStorage.getItem('@Challenge:movies')
       if (data && search.length >= 3) {
         const parsedData = JSON.parse(data)
-        const list = parsedData.filter(element => element.title.includes(search))
+        const list = parsedData.filter(element => element.Title.includes(search))
         return list
       }
     } catch (error) {
@@ -44,8 +44,12 @@ export default function HomeScreen() {
       const result = await axios.get(url)
       const payload = { movies: result.data.Search }
       try {
-        const r = await axios.post(db.saveSearch, payload)
-        console.log(r)
+        await axios.post(db.saveSearch, payload)
+        try {
+          await AsyncStorage.setItem('@Challenge:movies', JSON.stringify(payload.movies))
+        } catch (error) {
+          console.log('Saving in storage', error)
+        }
       } catch (error) {
         console.log('Saving in db -> ', error)
       }
