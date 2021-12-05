@@ -4,7 +4,15 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, omdbapi } from '../../services/api';
 import cinema from './../../../assets/cinema.png';
-import { Column, Container, EmptyLogo, MovieNotFound, Poster, Search, Wrapper } from './styles';
+import {
+  Column,
+  Container,
+  EmptyLogo,
+  MovieNotFound,
+  Poster,
+  Search,
+  Wrapper
+} from './styles';
 
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('')

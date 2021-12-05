@@ -8,3 +8,8 @@ export const Loader = styled.View`
   padding-top: 20px;
   justify-content: center;
 `
+export const FavoriteMenu = styled.Image`
+  width: 30px;
+  height: 30px;
+  margin: 0 30px;
+`
