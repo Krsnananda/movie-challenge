@@ -1,27 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Text, View, FlatList } from 'react-native'
+import React, { useState } from 'react';
+import { ActivityIndicator, FlatList, ToastAndroid } from 'react-native'
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, omdbapi } from '../../services/api';
 import cinema from './../../../assets/cinema.png';
-import { Container, EmptyLogo, Poster, Search, Wrapper } from './styles';
+import { Column, Container, EmptyLogo, MovieNotFound, Poster, Search, Wrapper } from './styles';
 
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('')
   const [columns, setColumns] = useState(3)
   const [movieList, setMovieList] = useState([])
   const [isSearching, setIsSearching] = useState(false)
-
-  useEffect(() => {
-    let searchExists = true
-    if (searchQuery.length < 3) {
-      setMovieList([])
-    }
-    return (() => {
-      searchExists = false
-    })
-  }, [searchQuery])
-
 
   // Search on Asyncstorage
   const searchStorage = async (search) => {
@@ -33,7 +22,7 @@ export default function HomeScreen() {
         return list
       }
     } catch (error) {
-      console.error(error)
+      console.error('Storage error ->', error)
     }
   }
 
@@ -44,7 +33,7 @@ export default function HomeScreen() {
       const result = await axios.get(url)
       return result.data
     } catch (error) {
-      console.log(error)
+      console.log('Db error ->', error)
     }
   }
 
@@ -53,20 +42,28 @@ export default function HomeScreen() {
     const url = omdbapi + search
     try {
       const result = await axios.get(url)
+      const payload = { movies: result.data.Search }
+      try {
+        const r = await axios.post(db.saveSearch, payload)
+        console.log(r)
+      } catch (error) {
+        console.log('Saving in db -> ', error)
+      }
       return result.data
+
     } catch (error) {
-      console.error(error);
+      console.error('API error -> ', error);
     }
   }
 
   // Search handler
   const handleSearch = async (search) => {
-    setSearchQuery(search)
+    search = normalizeTerm(search)
     try {
       if (search.length >= 3) {
         setIsSearching(true)
         const resultStorage = await searchStorage(search)
-        if (resultStorage.length > 0) {
+        if (resultStorage) {
           setMovieList(resultStorage)
           //   console.log(resultStorage)
         } else {
@@ -82,6 +79,11 @@ export default function HomeScreen() {
         }
         setIsSearching(false)
       } else {
+        ToastAndroid.showWithGravity(
+          "Search term too short!",
+          ToastAndroid.LONG,
+          ToastAndroid.TOP
+        );
         setMovieList([])
       }
     } catch (error) {
@@ -89,28 +91,18 @@ export default function HomeScreen() {
     }
   }
 
-  function createRows(data, columns) {
-    const rows = Math.floor(data.length / columns);
-    let lastRowElements = data.length - rows * columns;
-    while (lastRowElements !== columns) {
-      data.push({
-        imdbID: `empty-${lastRowElements}`,
-        title: `empty-${lastRowElements}`,
-        type: `empty-${lastRowElements}`,
-        year: `empty-${lastRowElements}`,
-        poster: `empty-${lastRowElements}`,
-
-        empty: true
-      });
-      lastRowElements += 1;
-    }
-    return data;
+  const normalizeTerm = (search) => {
+    const term = search.split(' ').join('+')
+    return term;
   }
+
   return (
     <Container>
       <Search
         placeholder="Search your favorite movie :)"
-        onChangeText={(search) => handleSearch(search)}
+        onChangeText={(search) => setSearchQuery(search)}
+        onIconPress={() => handleSearch(searchQuery)}
+        onSubmitEditing={() => handleSearch(searchQuery)}
         value={searchQuery}
         inputStyle={{ color: "#fff" }}
         placeholderTextColor={"#fff"}
@@ -123,24 +115,28 @@ export default function HomeScreen() {
           </Wrapper>
 
         ) : (
-          movieList.length > 0 ? (
+          movieList && movieList.length > 0 ? (
             <FlatList
-              data={createRows(movieList, columns)}
+              data={movieList}
               keyExtractor={item => item.imdbID}
               numColumns={columns}
               renderItem={({ item }) => {
                 return (
                   item.Poster != 'N/A' && (
-                    <View style={{ flexGrow: 1, margin: 4 }} >
-                      <Image style={{ height: 150, resizeMode: 'contain', borderRadius: 10 }} source={{ uri: item.Poster }} />
-                    </View>
+                    <Column>
+                      <Poster resizeMode={'contain'} source={{ uri: item.Poster }} />
+                    </Column>
                   )
                 );
               }}
             />
           ) : (
             <Wrapper>
-              <EmptyLogo source={cinema} />
+              {movieList == undefined ? (
+                <MovieNotFound>Movie not found!</MovieNotFound>
+              ) : (
+                <EmptyLogo source={cinema} />
+              )}
             </Wrapper>
           )
         )

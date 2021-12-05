@@ -16,8 +16,8 @@ export const EmptyLogo = styled.Image`
   height: 200px;
 `
 export const Poster = styled.Image`
-  width: 150px;
-  height: 150px;
+  height: 200px;
+  border-radius: 10px;
 `
 export const Wrapper = styled.View`
   margin-top: 50%;
@@ -25,4 +25,12 @@ export const Wrapper = styled.View`
   align-items: center;
   width: 100%;
   height: auto;
+`
+export const Column = styled.View`
+  flex: .33;
+  margin: 4px;
+`
+export const MovieNotFound = styled.Text`
+  font-size: 18px;
+  color: #fff;
 `
