@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, FlatList, ToastAndroid } from 'react-native'
+import React, { useState, useEffect } from 'react';
+import { ActivityIndicator, FlatList, ToastAndroid, TouchableOpacity, View } from 'react-native'
+import { Modal, Portal, Provider, IconButton, Colors } from 'react-native-paper'
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db, omdbapi } from '../../services/api';
 import cinema from './../../../assets/cinema.png';
@@ -8,17 +10,56 @@ import {
   Column,
   Container,
   EmptyLogo,
+  ModalInfo,
   MovieNotFound,
   Poster,
   Search,
+  Info,
   Wrapper
 } from './styles';
 
 export default function HomeScreen() {
+  const { } = useNavigation()
   const [searchQuery, setSearchQuery] = useState('')
   const [columns, setColumns] = useState(3)
   const [movieList, setMovieList] = useState([])
   const [isSearching, setIsSearching] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const [favorites, setFavorites] = useState([])
+  const [checked, setChecked] = useState(false)
+  const [movie, setMovie] = useState(
+    {
+      _id: '',
+      Title: '',
+      Year: '',
+      imdbID: '',
+      Type: '',
+      Poster: ''
+    })
+
+  useEffect(() => {
+    axios.get(db.favorites).then((res) => {
+      setFavorites(res.data)
+    }).catch(error => console.log('Error in favorites ->', error))
+  }, [checked])
+
+  const setFavoriteMovie = async (movie) => {
+    try {
+      const response = await axios.post(db.favorites, movie)
+      setFavorites(response.data)
+    } catch (error) {
+      console.log('Error on set favorite ->', error.message)
+    }
+  }
+
+  const removeFavoriteMovie = async (movie) => {
+    const url = `${db.favorites}/${movie.imdbID}`
+    try {
+      await axios.delete(url)
+    } catch (error) {
+      console.log('Error on remove favorite ->', error.message)
+    }
+  }
 
   // Search on Asyncstorage
   const searchStorage = async (search) => {
@@ -136,7 +177,12 @@ export default function HomeScreen() {
                 return (
                   item.Poster != 'N/A' && (
                     <Column>
-                      <Poster resizeMode={'contain'} source={{ uri: item.Poster }} />
+                      <TouchableOpacity onPress={() => {
+                        setMovie(item)
+                        setVisible(true)
+                      }}>
+                        <Poster resizeMode={'contain'} source={{ uri: item.Poster }} />
+                      </TouchableOpacity>
                     </Column>
                   )
                 );
@@ -153,6 +199,41 @@ export default function HomeScreen() {
           )
         )
       }
+      <Provider>
+        <Portal>
+          <ModalInfo
+            visible={visible}
+            onDismiss={() => setVisible(!visible)}
+          >
+            {favorites.length > 0 && favorites.find(o => o.imdbID === movie.imdbID) ? (
+              <IconButton
+                icon={"bookmark"}
+                color={Colors.red400}
+                size={35}
+                style={{ marginVertical: 20, marginHorizontal: 0 }}
+                onPress={() => {
+                  setChecked(!checked)
+                  removeFavoriteMovie(movie)
+                }}
+              />
+            ) : (
+              <IconButton
+                icon={"bookmark-outline"}
+                color={Colors.red400}
+                size={35}
+                style={{ marginVertical: 20, marginHorizontal: 0 }}
+                onPress={() => {
+                  setChecked(!checked)
+                  setFavoriteMovie(movie)
+                }}
+              />
+            )}
+            <Poster resizeMode={'contain'} source={{ uri: movie.Poster }} />
+            <Info>{movie.Title}</Info>
+            <Info>{'Release date: ' + movie.Year}</Info>
+          </ModalInfo>
+        </Portal>
+      </Provider>
     </Container>
   )
 }
